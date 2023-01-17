@@ -38,9 +38,34 @@ pipeline {
                 }
             }
         }
+        stage('DeployCanary') {
+            when {
+                branch 'master'
+            }
+            environment {
+                CANARY_REPLICAS '1'
+            }
+            steps {
+                kubernetesDeploy(
+                    kubeconfigId: 'kubeconfig',
+                    configs: 'kube-template-canary.yaml',
+                    enableConfigSubstitution: true
+                )
+            }
+        }
         stage('DeployToProduction') {
             when {
                 branch 'master'
+            }
+            environment {
+                CANARY_REPLICAS '0'
+            }
+            steps {
+                kubernetesDeploy(
+                    kubeconfigId: 'kubeconfig',
+                    configs: 'kube-template-canary.yaml',
+                    enableConfigSubstitution: true
+                )
             }
             steps {
                 input 'Deploy to Production?'
